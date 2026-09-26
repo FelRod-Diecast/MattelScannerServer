@@ -1,0 +1,10 @@
+{
+  "name": "mattel-scanner-server",
+  "version": "1.0.0",
+  "description": "24-7 Mattel Scanner",
+  "main": "scanner.js",
+  "type": "module",
+  "scripts": {
+    "start": "node scanner.js"
+  }
+}
