@@ -195,9 +195,22 @@ async function fetchMattelProducts() {
 
       if (!isHotWheels(p)) continue;
 
-    const launchInfo = await getLaunchInfo(p.handle);
+    let launchInfo = {
+  upcoming: false,
+  launchDate: null
+};
 
+const titleLower = p.title.toLowerCase();
 
+const shouldCheckLaunch =
+  titleLower.includes("rlc") ||
+  titleLower.includes("red line club") ||
+  titleLower.includes("elite 64") ||
+  titleLower.includes("transformers");
+
+if (shouldCheckLaunch) {
+  launchInfo = await getLaunchInfo(p.handle);
+}
 
 products.push({
   id: p.id,
