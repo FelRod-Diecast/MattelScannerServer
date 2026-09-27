@@ -200,16 +200,32 @@ async function fetchMattelProducts() {
   launchDate: null
 };
 
-const titleLower = p.title.toLowerCase();
+const existing = seenProducts[p.id];
 
-const shouldCheckLaunch =
-  titleLower.includes("rlc") ||
-  titleLower.includes("red line club") ||
-  titleLower.includes("elite 64") ||
-  titleLower.includes("transformers");
+if (
+  existing &&
+  existing.launchDate
+) {
 
-if (shouldCheckLaunch) {
-  launchInfo = await getLaunchInfo(p.handle);
+  launchInfo = {
+    upcoming: existing.upcoming || false,
+    launchDate: existing.launchDate
+  };
+
+} else {
+
+  const titleLower = p.title.toLowerCase();
+
+  const shouldCheckLaunch =
+    titleLower.includes("rlc") ||
+    titleLower.includes("red line club") ||
+    titleLower.includes("elite 64") ||
+    titleLower.includes("transformers");
+
+  if (shouldCheckLaunch) {
+    launchInfo = await getLaunchInfo(p.handle);
+  }
+
 }
 
 products.push({
