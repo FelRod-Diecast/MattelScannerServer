@@ -84,13 +84,19 @@ function saveAlerts(alerts) {
 function isHotWheels(product) {
   const title = (product.title || "").toLowerCase();
 
-  const excluded = [
+ const excluded = [
   "shirt",
   "t-shirt",
   "hoodie",
   "sweatshirt",
   "jacket",
+  "sweater",
+  "ugly sweater",
+  "crewneck",
+  "pullover",
+  "glass",
   "mug",
+  "pin",
   "poster",
   "sticker",
   "hat",
@@ -98,6 +104,11 @@ function isHotWheels(product) {
   "snapback",
   "beanie",
   "bag",
+  "backpack",
+  "wallet",
+  "lanyard",
+  "patch",
+  "pin",
   "tumbler",
   "jersey",
   "figure",
@@ -132,7 +143,38 @@ async function sendDiscord(embed) {
     console.error(err);
   }
 }
+async function getLaunchInfo(handle) {
+  try {
+    const res = await fetch(
+      `https://creations.mattel.com/products/${handle}`
+    );
 
+    const html = await res.text();
+
+    const match = html.match(
+      /Launches\s+([A-Za-z]+\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s*(?:am|pm)\s*PT)/i
+    );
+
+    if (!match) {
+      return {
+        upcoming: false,
+        launchDate: null
+      };
+    }
+
+    return {
+      upcoming: true,
+      launchDate: match[1]
+    };
+  } catch (err) {
+    console.error(err);
+
+    return {
+      upcoming: false,
+      launchDate: null
+    };
+  }
+}
 async function fetchMattelProducts() {
   const products = [];
   let page = 1;
@@ -153,7 +195,11 @@ async function fetchMattelProducts() {
 
       if (!isHotWheels(p)) continue;
 
-     products.push({
+    const launchInfo = await getLaunchInfo(p.handle);
+
+
+
+products.push({
   id: p.id,
   handle: p.handle,
   title: p.title,
@@ -161,7 +207,9 @@ async function fetchMattelProducts() {
   url: `https://creations.mattel.com/products/${p.handle}`,
   variantId: p.variants?.[0]?.id || null,
   price: p.variants?.[0]?.price || null,
-  image: p.images?.[0]?.src || null
+  image: p.images?.[0]?.src || null,
+  upcoming: launchInfo.upcoming,
+  launchDate: launchInfo.launchDate
 });
 
     }
@@ -189,10 +237,12 @@ const existingProduct =
   seenProducts[product.id];
     if (!seenProducts[product.id]) {
 
-      seenProducts[product.id] = {
+     seenProducts[product.id] = {
   title: product.title,
   handle: product.handle,
   available: product.available,
+  upcoming: product.upcoming || false,
+  launchDate: product.launchDate || null,
   firstSeen: new Date().toISOString(),
   lastSeen: new Date().toISOString()
 };
@@ -332,11 +382,12 @@ for (const product of products) {
   const previous =
     seenProducts[product.id];
 
-  if (
+ if (
   previous &&
   previous.available === false &&
   product.available === true
-) {
+)
+{
 
   const watchMatch =
     watchlist.find(keyword =>
@@ -345,61 +396,139 @@ for (const product of products) {
         .includes(keyword)
     );
 
-  if (watchMatch) {
+ if (watchMatch) {
+
+  if (product.upcoming) {
+
+    console.log(
+      `WATCHLIST UPCOMING: ${product.title}`
+    );
+
+    await sendDiscord({
+      title: "🚀 WATCHLIST UPCOMING",
+      url: product.url,
+      color: 16753920,
+      thumbnail: {
+        url: product.image
+      },
+      fields: [
+        {
+          name: "Product",
+          value: product.title
+        },
+        {
+          name: "Watchlist Keyword",
+          value: watchMatch,
+          inline: true
+        },
+        {
+          name: "Launch Date",
+          value: product.launchDate || "Mattel Launch Scheduled"
+        },
+        {
+          name: "Price",
+          value: `$${product.price}`,
+          inline: true
+        },
+        {
+          name: "View Product",
+          value: product.url
+        }
+      ]
+    });
+
+  } else {
 
     console.log(
       `WATCHLIST RESTOCK: ${product.title}`
     );
 
     await sendDiscord({
-  title: "🚨 WATCHLIST RESTOCK",
-  url: product.url,
-  color: 16711680,
-  thumbnail: {
-    url: product.image
-  },
-  fields: [
-    {
-      name: "Product",
-      value: product.title
-    },
-    {
-      name: "Watchlist Keyword",
-      value: watchMatch,
-      inline: true
-    },
-    {
-      name: "Price",
-      value: `$${product.price}`,
-      inline: true
-    },
-    {
-      name: "View Product",
-      value: product.url
-    },
-    {
-  name: "🛒 QTY 2",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
-  inline: true
-},
-{
-  name: "🛒 QTY 10",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
-  inline: true
-},
-{
-  name: "🛒 QTY 20",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
-  inline: true
-},
-{
-  name: "🛒 QTY 50",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
-  inline: true
-}
+      title: "🚨 WATCHLIST RESTOCK",
+      url: product.url,
+      color: 16711680,
+      thumbnail: {
+        url: product.image
+      },
+      fields: [
+        {
+          name: "Product",
+          value: product.title
+        },
+        {
+          name: "Watchlist Keyword",
+          value: watchMatch,
+          inline: true
+        },
+        {
+          name: "Price",
+          value: `$${product.price}`,
+          inline: true
+        },
+        {
+          name: "View Product",
+          value: product.url
+        },
+        {
+          name: "🛒 QTY 2",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
+          inline: true
+        },
+        {
+          name: "🛒 QTY 10",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
+          inline: true
+        },
+        {
+          name: "🛒 QTY 20",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
+          inline: true
+        },
+        {
+          name: "🛒 QTY 50",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
+          inline: true
+        }
+      ]
+    });
 
-  ]
-});
+  }
+
+  } else {
+
+  if (product.upcoming) {
+
+    console.log(
+      `UPCOMING LAUNCH: ${product.title}`
+    );
+
+    await sendDiscord({
+      title: "🚀 UPCOMING LAUNCH",
+      url: product.url,
+      color: 16753920,
+      thumbnail: {
+        url: product.image
+      },
+      fields: [
+        {
+          name: "Product",
+          value: product.title
+        },
+        {
+          name: "Launch Date",
+          value: product.launchDate || "Mattel Launch Scheduled"
+        },
+        {
+          name: "Price",
+          value: `$${product.price}`,
+          inline: true
+        },
+        {
+          name: "View Product",
+          value: product.url
+        }
+      ]
+    });
 
   } else {
 
@@ -407,54 +536,53 @@ for (const product of products) {
       `RESTOCK: ${product.title}`
     );
 
-   await sendDiscord({
-  title: "🔥 RESTOCK",
-  url: product.url,
-  color: 65280,
-  thumbnail: {
-    url: product.image
-  },
-  fields: [
-    {
-      name: "Product",
-      value: product.title
-    },
-    {
-      name: "Price",
-      value: `$${product.price}`,
-      inline: true
-    },
-    {
-      name: "View Product",
-      value: product.url,
-      inline: false
-    },
-   {
-  name: "🛒 QTY 2",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
-  inline: true
-},
-{
-  name: "🛒 QTY 10",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
-  inline: true
-},
-{
-  name: "🛒 QTY 20",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
-  inline: true
-},
-{
-  name: "🛒 QTY 50",
-  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
-  inline: true
-}
-
-
-  ]
-});
+    await sendDiscord({
+      title: "🔥 RESTOCK",
+      url: product.url,
+      color: 65280,
+      thumbnail: {
+        url: product.image
+      },
+      fields: [
+        {
+          name: "Product",
+          value: product.title
+        },
+        {
+          name: "Price",
+          value: `$${product.price}`,
+          inline: true
+        },
+        {
+          name: "View Product",
+          value: product.url,
+          inline: false
+        },
+        {
+          name: "🛒 QTY 2",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
+          inline: true
+        },
+        {
+          name: "🛒 QTY 10",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
+          inline: true
+        },
+        {
+          name: "🛒 QTY 20",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
+          inline: true
+        },
+        {
+          name: "🛒 QTY 50",
+          value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
+          inline: true
+        }
+      ]
+    });
 
   }
+}
 
   stats.restocksToday++;
 
@@ -462,16 +590,19 @@ for (const product of products) {
 
 }
 for (const product of products) {
+if (seenProducts[product.id]) {
+  seenProducts[product.id].available =
+    product.available;
 
-  if (seenProducts[product.id]) {
+  seenProducts[product.id].upcoming =
+    product.upcoming || false;
 
-    seenProducts[product.id].available =
-      product.available;
+  seenProducts[product.id].launchDate =
+    product.launchDate || null;
 
-    seenProducts[product.id].lastSeen =
-      new Date().toISOString();
-
-  }
+  seenProducts[product.id].lastSeen =
+    new Date().toISOString();
+}
 
 }
 saveProducts(seenProducts);
