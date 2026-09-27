@@ -1,0 +1,9 @@
+.env
+
+node_modules/
+
+products.json
+alerts.json
+stats.json
+
+.DS_Store
