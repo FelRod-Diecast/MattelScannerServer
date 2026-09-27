@@ -232,26 +232,27 @@ if (product.available) {
       name: "View Product",
       value: product.url
     },
-    {
-      name: "🛒 Checkout x2",
-      value: `https://creations.mattel.com/cart/${product.variantId}:2`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x10",
-      value: `https://creations.mattel.com/cart/${product.variantId}:10`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x20",
-      value: `https://creations.mattel.com/cart/${product.variantId}:20`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x50",
-      value: `https://creations.mattel.com/cart/${product.variantId}:50`,
-      inline: true
-    }
+   {
+  name: "🛒 QTY 2",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 10",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 20",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 50",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
+  inline: true
+}
+
   ]
 });
 
@@ -300,26 +301,27 @@ if (watchMatch && product.available) {
         name: "View Product",
         value: product.url
       },
-      {
-        name: "🛒 Checkout x2",
-        value: `https://creations.mattel.com/cart/${product.variantId}:2`,
-        inline: true
-      },
-      {
-        name: "🛒 Checkout x10",
-        value: `https://creations.mattel.com/cart/${product.variantId}:10`,
-        inline: true
-      },
-      {
-        name: "🛒 Checkout x20",
-        value: `https://creations.mattel.com/cart/${product.variantId}:20`,
-        inline: true
-      },
-      {
-        name: "🛒 Checkout x50",
-        value: `https://creations.mattel.com/cart/${product.variantId}:50`,
-        inline: true
-      }
+     {
+  name: "🛒 QTY 2",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 10",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 20",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 50",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
+  inline: true
+}
+
     ]
   });
 }
@@ -376,25 +378,26 @@ for (const product of products) {
       value: product.url
     },
     {
-      name: "🛒 Checkout x2",
-      value: `https://creations.mattel.com/cart/${product.variantId}:2`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x10",
-      value: `https://creations.mattel.com/cart/${product.variantId}:10`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x20",
-      value: `https://creations.mattel.com/cart/${product.variantId}:20`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x50",
-      value: `https://creations.mattel.com/cart/${product.variantId}:50`,
-      inline: true
-    }
+  name: "🛒 QTY 2",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 10",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 20",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
+  inline: true
+},
+{
+  name: "🛒 QTY 50",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
+  inline: true
+}
+
   ]
 });
 
@@ -426,26 +429,27 @@ for (const product of products) {
       value: product.url,
       inline: false
     },
-    {
-  name: "🛒 Checkout x2",
-  value: `https://creations.mattel.com/cart/${product.variantId}:2`,
+   {
+  name: "🛒 QTY 2",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
   inline: true
 },
 {
-  name: "🛒 Checkout x10",
-  value: `https://creations.mattel.com/cart/${product.variantId}:10`,
+  name: "🛒 QTY 10",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:10)`,
   inline: true
 },
 {
-  name: "🛒 Checkout x20",
-  value: `https://creations.mattel.com/cart/${product.variantId}:20`,
+  name: "🛒 QTY 20",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:20)`,
   inline: true
 },
 {
-  name: "🛒 Checkout x50",
-  value: `https://creations.mattel.com/cart/${product.variantId}:50`,
+  name: "🛒 QTY 50",
+  value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:50)`,
   inline: true
 }
+
 
   ]
 });
