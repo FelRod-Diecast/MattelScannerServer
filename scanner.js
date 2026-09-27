@@ -157,7 +157,7 @@ async function fetchMattelProducts() {
         id: p.id,
         handle: p.handle,
         title: p.title,
-        available: p.variants?.[0]?.available || false,
+       available: p.variants?.some(v => v.available) || false,
         url: `https://creations.mattel.com/products/${p.handle}`
       });
     }
@@ -179,9 +179,37 @@ async function scanMattel() {
 const stats = loadStats();
 const alerts = loadAlerts();
 const watchlist = loadWatchlist();
+const debugProduct = products.find(
+  p => p.title.includes("Ferrari")
+);
 
+if (debugProduct) {
+
+  const saved =
+    seenProducts[debugProduct.id];
+
+  console.log("==========");
+
+  console.log(
+    "DEBUG PRODUCT:",
+    debugProduct.title
+  );
+
+  console.log(
+    "Saved Availability:",
+    saved?.available
+  );
+
+  console.log(
+    "Live Availability:",
+    debugProduct.available
+  );
+
+  console.log("==========");
+}
   for (const product of products) {
-
+const existingProduct =
+  seenProducts[product.id];
     if (!seenProducts[product.id]) {
 
       seenProducts[product.id] = {
@@ -210,7 +238,46 @@ alerts.splice(10);
       });
     }
   }
+for (const product of products) {
 
+  const previous =
+    seenProducts[product.id];
+
+  if (
+    previous &&
+    previous.available === false &&
+    product.available === true
+  ) {
+
+    console.log(
+      `RESTOCK: ${product.title}`
+    );
+
+    await sendDiscord({
+      title: "🔥 RESTOCK",
+      description: product.title,
+      url: product.url,
+      color: 65280
+    });
+
+    stats.restocksToday++;
+
+  }
+
+}
+for (const product of products) {
+
+  if (seenProducts[product.id]) {
+
+    seenProducts[product.id].available =
+      product.available;
+
+    seenProducts[product.id].lastSeen =
+      new Date().toISOString();
+
+  }
+
+}
 saveProducts(seenProducts);
 saveStats(stats);
 saveAlerts(alerts);
