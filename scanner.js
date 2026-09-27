@@ -206,34 +206,16 @@ const existing = seenProducts[p.id];
 const productUrl =
   `https://creations.mattel.com/products/${p.handle}`;
 
-let pageValid = true;
 let pageHtml = "";
 
 try {
   const pageCheck = await fetch(productUrl);
 
-if (!pageCheck.ok) {
-  pageValid = false;
-} else {
-  pageHtml = await pageCheck.text();
-
-  if (
-    pageHtml.includes("Page not found") ||
-    pageHtml.includes("404") ||
-    pageHtml.includes("Not Found")
-  ) {
-    pageValid = false;
+  if (pageCheck.ok) {
+    pageHtml = await pageCheck.text();
   }
-}
-} catch {
-  pageValid = false;
-}
-
-if (!pageValid) {
-  console.log(
-    `SKIPPING DEAD PAGE: ${p.title}`
-  );
-  continue;
+} catch (err) {
+  console.error(err);
 }
 if (
   !existing?.launchDate
