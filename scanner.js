@@ -179,34 +179,7 @@ async function scanMattel() {
 const stats = loadStats();
 const alerts = loadAlerts();
 const watchlist = loadWatchlist();
-const debugProduct = products.find(
-  p => p.title.includes("Ferrari")
-);
 
-if (debugProduct) {
-
-  const saved =
-    seenProducts[debugProduct.id];
-
-  console.log("==========");
-
-  console.log(
-    "DEBUG PRODUCT:",
-    debugProduct.title
-  );
-
-  console.log(
-    "Saved Availability:",
-    saved?.available
-  );
-
-  console.log(
-    "Live Availability:",
-    debugProduct.available
-  );
-
-  console.log("==========");
-}
   for (const product of products) {
 const existingProduct =
   seenProducts[product.id];
@@ -236,6 +209,28 @@ alerts.splice(10);
         url: product.url,
         color: 3447003
       });
+     const watchMatch =
+  watchlist.find(keyword =>
+    product.title
+      .toLowerCase()
+      .includes(keyword)
+  );
+
+if (watchMatch) {
+
+  console.log(
+    `WATCHLIST MATCH: ${product.title}`
+  );
+
+  await sendDiscord({
+    title: "🚨 WATCHLIST MATCH",
+    description:
+      `${product.title}\n\nKeyword: ${watchMatch}`,
+    url: product.url,
+    color: 16711680
+  });
+
+} 
     }
   }
 for (const product of products) {
@@ -244,10 +239,33 @@ for (const product of products) {
     seenProducts[product.id];
 
   if (
-    previous &&
-    previous.available === false &&
-    product.available === true
-  ) {
+  previous &&
+  previous.available === false &&
+  product.available === true
+) {
+
+  const watchMatch =
+    watchlist.find(keyword =>
+      product.title
+        .toLowerCase()
+        .includes(keyword)
+    );
+
+  if (watchMatch) {
+
+    console.log(
+      `WATCHLIST RESTOCK: ${product.title}`
+    );
+
+    await sendDiscord({
+      title: "🚨 WATCHLIST RESTOCK",
+      description:
+        `${product.title}\n\nKeyword: ${watchMatch}`,
+      url: product.url,
+      color: 16711680
+    });
+
+  } else {
 
     console.log(
       `RESTOCK: ${product.title}`
@@ -260,9 +278,11 @@ for (const product of products) {
       color: 65280
     });
 
-    stats.restocksToday++;
-
   }
+
+  stats.restocksToday++;
+
+}
 
 }
 for (const product of products) {
