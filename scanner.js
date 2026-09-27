@@ -153,13 +153,17 @@ async function fetchMattelProducts() {
 
       if (!isHotWheels(p)) continue;
 
-      products.push({
-        id: p.id,
-        handle: p.handle,
-        title: p.title,
-       available: p.variants?.some(v => v.available) || false,
-        url: `https://creations.mattel.com/products/${p.handle}`
-      });
+     products.push({
+  id: p.id,
+  handle: p.handle,
+  title: p.title,
+  available: p.variants?.some(v => v.available) || false,
+  url: `https://creations.mattel.com/products/${p.handle}`,
+  variantId: p.variants?.[0]?.id || null,
+  price: p.variants?.[0]?.price || null,
+  image: p.images?.[0]?.src || null
+});
+
     }
 
     page++;
@@ -208,12 +212,48 @@ if (product.available) {
   alerts.splice(10);
 
   await sendDiscord({
-    title: "🆕 NEW PRODUCT",
-    description:
-      `✅ IN STOCK\n\n${product.title}`,
-    url: product.url,
-    color: 3447003
-  });
+  title: "🆕 NEW PRODUCT",
+  url: product.url,
+  color: 3447003,
+  thumbnail: {
+    url: product.image
+  },
+  fields: [
+    {
+      name: "Product",
+      value: product.title
+    },
+    {
+      name: "Price",
+      value: `$${product.price}`,
+      inline: true
+    },
+    {
+      name: "View Product",
+      value: product.url
+    },
+    {
+      name: "🛒 Checkout x2",
+      value: `https://creations.mattel.com/cart/${product.variantId}:2`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x10",
+      value: `https://creations.mattel.com/cart/${product.variantId}:10`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x20",
+      value: `https://creations.mattel.com/cart/${product.variantId}:20`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x50",
+      value: `https://creations.mattel.com/cart/${product.variantId}:50`,
+      inline: true
+    }
+  ]
+});
 
 } else {
 
@@ -236,12 +276,53 @@ if (watchMatch) {
   );
 
   await sendDiscord({
-    title: "🚨 WATCHLIST MATCH",
-    description:
-      `${product.title}\n\nKeyword: ${watchMatch}`,
-    url: product.url,
-    color: 16711680
-  });
+  title: "🚨 WATCHLIST MATCH",
+  url: product.url,
+  color: 16711680,
+  thumbnail: {
+    url: product.image
+  },
+  fields: [
+    {
+      name: "Product",
+      value: product.title
+    },
+    {
+      name: "Watchlist Keyword",
+      value: watchMatch,
+      inline: true
+    },
+    {
+      name: "Price",
+      value: `$${product.price}`,
+      inline: true
+    },
+    {
+      name: "View Product",
+      value: product.url
+    },
+    {
+      name: "🛒 Checkout x2",
+      value: `https://creations.mattel.com/cart/${product.variantId}:2`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x10",
+      value: `https://creations.mattel.com/cart/${product.variantId}:10`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x20",
+      value: `https://creations.mattel.com/cart/${product.variantId}:20`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x50",
+      value: `https://creations.mattel.com/cart/${product.variantId}:50`,
+      inline: true
+    }
+  ]
+});
 
 } 
     }
@@ -271,12 +352,53 @@ for (const product of products) {
     );
 
     await sendDiscord({
-      title: "🚨 WATCHLIST RESTOCK",
-      description:
-        `${product.title}\n\nKeyword: ${watchMatch}`,
-      url: product.url,
-      color: 16711680
-    });
+  title: "🚨 WATCHLIST RESTOCK",
+  url: product.url,
+  color: 16711680,
+  thumbnail: {
+    url: product.image
+  },
+  fields: [
+    {
+      name: "Product",
+      value: product.title
+    },
+    {
+      name: "Watchlist Keyword",
+      value: watchMatch,
+      inline: true
+    },
+    {
+      name: "Price",
+      value: `$${product.price}`,
+      inline: true
+    },
+    {
+      name: "View Product",
+      value: product.url
+    },
+    {
+      name: "🛒 Checkout x2",
+      value: `https://creations.mattel.com/cart/${product.variantId}:2`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x10",
+      value: `https://creations.mattel.com/cart/${product.variantId}:10`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x20",
+      value: `https://creations.mattel.com/cart/${product.variantId}:20`,
+      inline: true
+    },
+    {
+      name: "🛒 Checkout x50",
+      value: `https://creations.mattel.com/cart/${product.variantId}:50`,
+      inline: true
+    }
+  ]
+});
 
   } else {
 
@@ -284,12 +406,51 @@ for (const product of products) {
       `RESTOCK: ${product.title}`
     );
 
-    await sendDiscord({
-      title: "🔥 RESTOCK",
-      description: product.title,
-      url: product.url,
-      color: 65280
-    });
+   await sendDiscord({
+  title: "🔥 RESTOCK",
+  url: product.url,
+  color: 65280,
+  thumbnail: {
+    url: product.image
+  },
+  fields: [
+    {
+      name: "Product",
+      value: product.title
+    },
+    {
+      name: "Price",
+      value: `$${product.price}`,
+      inline: true
+    },
+    {
+      name: "View Product",
+      value: product.url,
+      inline: false
+    },
+    {
+  name: "🛒 Checkout x2",
+  value: `https://creations.mattel.com/cart/${product.variantId}:2`,
+  inline: true
+},
+{
+  name: "🛒 Checkout x10",
+  value: `https://creations.mattel.com/cart/${product.variantId}:10`,
+  inline: true
+},
+{
+  name: "🛒 Checkout x20",
+  value: `https://creations.mattel.com/cart/${product.variantId}:20`,
+  inline: true
+},
+{
+  name: "🛒 Checkout x50",
+  value: `https://creations.mattel.com/cart/${product.variantId}:50`,
+  inline: true
+}
+
+  ]
+});
 
   }
 
@@ -315,8 +476,9 @@ saveProducts(seenProducts);
 saveStats(stats);
 saveAlerts(alerts);
   console.log(
-    `Scan complete. Found ${products.length} products`
-  );
+  `Scan complete. Found ${products.length} products`
+);
+
 }
 
 async function startScanner() {
