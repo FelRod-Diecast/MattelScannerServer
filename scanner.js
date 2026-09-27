@@ -2,9 +2,22 @@ import "dotenv/config";
 import fs from "fs";
 import { config } from "./config.js";
 
+import {
+  Client,
+  GatewayIntentBits
+} from "discord.js";
+
 const BLOCKED_HANDLES = [
   "red-line-club-exclusive-2025-hot-wheels-super-treasure-hunt-set-jcp51"
 ];
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
 function loadProducts() {
   try {
     return JSON.parse(
@@ -632,7 +645,74 @@ saveAlerts(alerts);
 );
 
 }
+client.once("ready", () => {
+  console.log(
+    `✅ Logged in as ${client.user.tag}`
+  );
+});
 
+client.on(
+  "messageCreate",
+  async message => {
+
+    if (message.author.bot) return;
+
+    if (message.content === "!status") {
+      const products = loadProducts();
+
+      return message.reply(
+        `✅ Online\n📦 Tracking ${
+          Object.keys(products).length
+        } products`
+      );
+    }
+
+    if (message.content === "!stats") {
+      const stats = loadStats();
+
+      return message.reply(
+        "📊 Mattel Stats\n\n" +
+        `🆕 New Products: ${stats.newProductsToday}\n` +
+        `🔥 Restocks: ${stats.restocksToday}\n` +
+        `❌ Sold Out: ${stats.soldOutToday}`
+      );
+    }
+
+    if (message.content === "!alerts") {
+      const alerts = loadAlerts();
+
+      return message.reply(
+        alerts.length
+          ? alerts.join("\n")
+          : "No alerts recorded."
+      );
+    }
+
+    if (message.content === "!watchlist") {
+      const watchlist = loadWatchlist();
+
+      return message.reply(
+        watchlist.length
+          ? watchlist.join("\n")
+          : "Watchlist empty."
+      );
+    }
+
+    if (message.content === "!debug") {
+      const products = loadProducts();
+      const stats = loadStats();
+
+      return message.reply(
+        "🛠️ Debug\n\n" +
+        `📦 Products: ${Object.keys(products).length}\n` +
+        `🆕 New: ${stats.newProductsToday}\n` +
+        `🔥 Restocks: ${stats.restocksToday}\n` +
+        `❌ Sold Out: ${stats.soldOutToday}`
+      );
+    }
+
+  }
+);
 async function startScanner() {
 
   await scanMattel();
@@ -648,4 +728,8 @@ async function startScanner() {
   }, config.scanIntervalMinutes * 60 * 1000);
 }
 
-startScanner();
+client.login(process.env.DISCORD_TOKEN);
+
+client.once("ready", async () => {
+  await startScanner();
+});
