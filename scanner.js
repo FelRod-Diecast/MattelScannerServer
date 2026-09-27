@@ -262,69 +262,67 @@ if (product.available) {
   );
 
 }
-     const watchMatch =
+    const watchMatch =
   watchlist.find(keyword =>
     product.title
       .toLowerCase()
       .includes(keyword)
   );
 
-if (watchMatch) {
-
+if (watchMatch && product.available) {
   console.log(
     `WATCHLIST MATCH: ${product.title}`
   );
 
   await sendDiscord({
-  title: "🚨 WATCHLIST MATCH",
-  url: product.url,
-  color: 16711680,
-  thumbnail: {
-    url: product.image
-  },
-  fields: [
-    {
-      name: "Product",
-      value: product.title
+    title: "🚨 WATCHLIST MATCH",
+    url: product.url,
+    color: 16711680,
+    thumbnail: {
+      url: product.image
     },
-    {
-      name: "Watchlist Keyword",
-      value: watchMatch,
-      inline: true
-    },
-    {
-      name: "Price",
-      value: `$${product.price}`,
-      inline: true
-    },
-    {
-      name: "View Product",
-      value: product.url
-    },
-    {
-      name: "🛒 Checkout x2",
-      value: `https://creations.mattel.com/cart/${product.variantId}:2`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x10",
-      value: `https://creations.mattel.com/cart/${product.variantId}:10`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x20",
-      value: `https://creations.mattel.com/cart/${product.variantId}:20`,
-      inline: true
-    },
-    {
-      name: "🛒 Checkout x50",
-      value: `https://creations.mattel.com/cart/${product.variantId}:50`,
-      inline: true
-    }
-  ]
-});
-
-} 
+    fields: [
+      {
+        name: "Product",
+        value: product.title
+      },
+      {
+        name: "Watchlist Keyword",
+        value: watchMatch,
+        inline: true
+      },
+      {
+        name: "Price",
+        value: `$${product.price}`,
+        inline: true
+      },
+      {
+        name: "View Product",
+        value: product.url
+      },
+      {
+        name: "🛒 Checkout x2",
+        value: `https://creations.mattel.com/cart/${product.variantId}:2`,
+        inline: true
+      },
+      {
+        name: "🛒 Checkout x10",
+        value: `https://creations.mattel.com/cart/${product.variantId}:10`,
+        inline: true
+      },
+      {
+        name: "🛒 Checkout x20",
+        value: `https://creations.mattel.com/cart/${product.variantId}:20`,
+        inline: true
+      },
+      {
+        name: "🛒 Checkout x50",
+        value: `https://creations.mattel.com/cart/${product.variantId}:50`,
+        inline: true
+      }
+    ]
+  });
+}
     }
   }
 for (const product of products) {
