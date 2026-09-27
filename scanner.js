@@ -194,21 +194,34 @@ const existingProduct =
 };
 
       console.log(
-        `NEW PRODUCT: ${product.title}`
-      );
-stats.newProductsToday++;
-
-alerts.unshift(
-  `🆕 ${product.title}`
+  `NEW PRODUCT: ${product.title}`
 );
 
-alerts.splice(10);
-      await sendDiscord({
-        title: "🆕 NEW PRODUCT",
-        description: product.title,
-        url: product.url,
-        color: 3447003
-      });
+if (product.available) {
+
+  stats.newProductsToday++;
+
+  alerts.unshift(
+    `🆕 ${product.title}`
+  );
+
+  alerts.splice(10);
+
+  await sendDiscord({
+    title: "🆕 NEW PRODUCT",
+    description:
+      `✅ IN STOCK\n\n${product.title}`,
+    url: product.url,
+    color: 3447003
+  });
+
+} else {
+
+  console.log(
+    `NEW PRODUCT SOLD OUT: ${product.title}`
+  );
+
+}
      const watchMatch =
   watchlist.find(keyword =>
     product.title
