@@ -143,37 +143,25 @@ async function sendDiscord(embed) {
     console.error(err);
   }
 }
-async function getLaunchInfo(handle) {
-  try {
-    const res = await fetch(
-      `https://creations.mattel.com/products/${handle}`
-    );
+function getLaunchInfoFromHtml(html) {
+  const match = html.match(
+    /Launches\s+([A-Za-z]+\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s*(?:am|pm)\s*PT)/i
+  );
 
-    const html = await res.text();
-
-    const match = html.match(
-      /Launches\s+([A-Za-z]+\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s*(?:am|pm)\s*PT)/i
-    );
-
-    if (!match) {
-      return {
-        upcoming: false,
-        launchDate: null
-      };
-    }
-
-    return {
-      upcoming: true,
-      launchDate: match[1]
-    };
-  } catch (err) {
-    console.error(err);
-
+  if (!match) {
     return {
       upcoming: false,
       launchDate: null
     };
   }
+
+  const launchDate = new Date(match[1]);
+  const now = new Date();
+
+  return {
+    upcoming: launchDate > now,
+    launchDate: match[1]
+  };
 }
 async function fetchMattelProducts() {
   const products = [];
@@ -202,18 +190,41 @@ async function fetchMattelProducts() {
 
 const existing = seenProducts[p.id];
 
-if (
-  existing &&
-  existing.launchDate
-) {
+const productUrl =
+  `https://creations.mattel.com/products/${p.handle}`;
 
-  launchInfo = {
-    upcoming: existing.upcoming || false,
-    launchDate: existing.launchDate
-  };
+let pageValid = true;
+let pageHtml = "";
 
+try {
+  const pageCheck = await fetch(productUrl);
+
+if (!pageCheck.ok) {
+  pageValid = false;
 } else {
+  pageHtml = await pageCheck.text();
 
+  if (
+    pageHtml.includes("Page not found") ||
+    pageHtml.includes("404") ||
+    pageHtml.includes("Not Found")
+  ) {
+    pageValid = false;
+  }
+}
+} catch {
+  pageValid = false;
+}
+
+if (!pageValid) {
+  console.log(
+    `SKIPPING DEAD PAGE: ${p.title}`
+  );
+  continue;
+}
+if (
+  !existing?.launchDate
+) {
   const titleLower = p.title.toLowerCase();
 
   const shouldCheckLaunch =
@@ -223,19 +234,23 @@ if (
     titleLower.includes("transformers");
 
   if (shouldCheckLaunch) {
-    launchInfo = await getLaunchInfo(p.handle);
+    launchInfo =
+      getLaunchInfoFromHtml(pageHtml);
   }
-
 }
+const activeVariant =
+  p.variants?.find(v => v.available) ||
+  p.variants?.[0] ||
+  null;
 
 products.push({
   id: p.id,
   handle: p.handle,
   title: p.title,
   available: p.variants?.some(v => v.available) || false,
-  url: `https://creations.mattel.com/products/${p.handle}`,
-  variantId: p.variants?.[0]?.id || null,
-  price: p.variants?.[0]?.price || null,
+  url: productUrl,
+  variantId: activeVariant?.id || null,
+  price: activeVariant?.price || null,
   image: p.images?.[0]?.src || null,
   upcoming: launchInfo.upcoming,
   launchDate: launchInfo.launchDate
@@ -298,19 +313,13 @@ if (product.available) {
     url: product.image
   },
   fields: [
-    {
-      name: "Product",
-      value: product.title
-    },
+   
     {
       name: "Price",
       value: `$${product.price}`,
       inline: true
     },
-    {
-      name: "View Product",
-      value: product.url
-    },
+ 
    {
   name: "🛒 QTY 2",
   value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
@@ -362,10 +371,7 @@ if (watchMatch && product.available) {
       url: product.image
     },
     fields: [
-      {
-        name: "Product",
-        value: product.title
-      },
+     
       {
         name: "Watchlist Keyword",
         value: watchMatch,
@@ -376,10 +382,7 @@ if (watchMatch && product.available) {
         value: `$${product.price}`,
         inline: true
       },
-      {
-        name: "View Product",
-        value: product.url
-      },
+      
      {
   name: "🛒 QTY 2",
   value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
@@ -459,10 +462,7 @@ for (const product of products) {
           value: `$${product.price}`,
           inline: true
         },
-        {
-          name: "View Product",
-          value: product.url
-        }
+        
       ]
     });
 
@@ -494,10 +494,7 @@ for (const product of products) {
           value: `$${product.price}`,
           inline: true
         },
-        {
-          name: "View Product",
-          value: product.url
-        },
+     
         {
           name: "🛒 QTY 2",
           value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
@@ -552,10 +549,7 @@ for (const product of products) {
           value: `$${product.price}`,
           inline: true
         },
-        {
-          name: "View Product",
-          value: product.url
-        }
+     
       ]
     });
 
@@ -582,11 +576,7 @@ for (const product of products) {
           value: `$${product.price}`,
           inline: true
         },
-        {
-          name: "View Product",
-          value: product.url,
-          inline: false
-        },
+        
         {
           name: "🛒 QTY 2",
           value: `[OPEN CART](https://creations.mattel.com/cart/${product.variantId}:2)`,
