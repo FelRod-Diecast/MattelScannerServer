@@ -279,16 +279,49 @@ const existingProduct =
      seenProducts[product.id] = {
   title: product.title,
   handle: product.handle,
+
   available: product.available,
+
+  price: product.price || null,
+  previousPrice: null,
+
   upcoming: product.upcoming || false,
   launchDate: product.launchDate || null,
+
   firstSeen: new Date().toISOString(),
-  lastSeen: new Date().toISOString()
+  lastSeen: new Date().toISOString(),
+
+  wasHidden: product.available === false,
+  hiddenAlertSent: false,
+
+  stats: {
+    restockEvents: 0,
+    soldOutEvents: 0,
+    restockTimestamps: []
+  }
 };
 
-      console.log(
-  `NEW PRODUCT: ${product.title}`
-);
+ const isHiddenOpportunity =
+  product.available === false &&
+  !product.launchDate;
+
+const isFutureOpportunity =
+  product.available === false &&
+  product.launchDate;
+
+if (isHiddenOpportunity) {
+  console.log(
+    `HIDDEN OPPORTUNITY: ${product.title}`
+  );
+} else if (isFutureOpportunity) {
+  console.log(
+    `FUTURE OPPORTUNITY: ${product.title}`
+  );
+} else {
+  console.log(
+    `NEW PRODUCT: ${product.title}`
+  );
+}
 
 if (product.available) {
 
@@ -338,12 +371,21 @@ if (product.available) {
 
   ]
 });
-
 } else {
 
-  console.log(
-    `NEW PRODUCT SOLD OUT: ${product.title}`
-  );
+  if (
+    !product.launchDate
+  ) {
+    seenProducts[product.id].wasHidden = true;
+
+    console.log(
+      `HIDDEN PRODUCT DETECTED: ${product.title}`
+    );
+  } else {
+    console.log(
+      `FUTURE RELEASE DETECTED: ${product.title}`
+    );
+  }
 
 }
     const watchMatch =
@@ -416,12 +458,25 @@ for (const product of products) {
 )
 {
 
-  const watchMatch =
-    watchlist.find(keyword =>
-      product.title
-        .toLowerCase()
-        .includes(keyword)
-    );
+  const wasHiddenOpportunity =
+  previous.wasHidden === true;
+
+const watchMatch =
+  watchlist.find(keyword =>
+    product.title
+      .toLowerCase()
+      .includes(keyword)
+  );
+
+if (wasHiddenOpportunity) {
+  console.log(
+    `HIDDEN PRODUCT WENT LIVE: ${product.title}`
+  );
+} else {
+  console.log(
+    `PRODUCT BACK IN STOCK: ${product.title}`
+  );
+}
 
  if (watchMatch) {
 
@@ -605,17 +660,62 @@ for (const product of products) {
 }
 for (const product of products) {
 if (seenProducts[product.id]) {
-  seenProducts[product.id].available =
-    product.available;
 
-  seenProducts[product.id].upcoming =
-    product.upcoming || false;
+  if (
+    seenProducts[product.id].price === undefined
+  ) {
+    seenProducts[product.id].price =
+      product.price || null;
+  }
 
-  seenProducts[product.id].launchDate =
-    product.launchDate || null;
+  if (
+    seenProducts[product.id].previousPrice === undefined
+  ) {
+    seenProducts[product.id].previousPrice =
+      null;
+  }
 
-  seenProducts[product.id].lastSeen =
-    new Date().toISOString();
+  if (
+    seenProducts[product.id].wasHidden === undefined
+  ) {
+    seenProducts[product.id].wasHidden =
+      false;
+  }
+
+  if (
+    seenProducts[product.id].hiddenAlertSent === undefined
+  ) {
+    seenProducts[product.id].hiddenAlertSent =
+      false;
+  }
+
+  if (
+    seenProducts[product.id].stats === undefined
+  ) {
+    seenProducts[product.id].stats = {
+      restockEvents: 0,
+      soldOutEvents: 0,
+      restockTimestamps: []
+    };
+  }
+
+  seenProducts[product.id].previousPrice =
+  seenProducts[product.id].price ?? null;
+
+seenProducts[product.id].price =
+  product.price || null;
+
+seenProducts[product.id].available =
+  product.available;
+
+seenProducts[product.id].upcoming =
+  product.upcoming || false;
+
+seenProducts[product.id].launchDate =
+  product.launchDate || null;
+
+seenProducts[product.id].lastSeen =
+  new Date().toISOString();
 }
 
 }
@@ -692,9 +792,134 @@ client.on(
         `❌ Sold Out: ${stats.soldOutToday}`
       );
     }
+if (message.content === "!health") {
+  const products = loadProducts();
+  const stats = loadStats();
 
+  return message.reply(
+    "🤖 MattelBotV3 Health\n\n" +
+    "✅ Online\n" +
+    `📦 Tracking: ${Object.keys(products).length}\n` +
+    `🆕 New Today: ${stats.newProductsToday}\n` +
+    `🔥 Restocks Today: ${stats.restocksToday}\n` +
+    `❌ Sold Out Today: ${stats.soldOutToday}\n` +
+    `⏰ Checked: ${new Date().toLocaleString()}`
+  );
+}
+
+if (message.content === "!counts") {
+  const products = Object.values(
+    loadProducts()
+  );
+
+  const inStock = products.filter(
+    p => p.available === true
+  ).length;
+
+  const soldOut = products.filter(
+    p => p.available === false
+  ).length;
+
+  return message.reply(
+    "📦 Mattel Inventory Counts\n\n" +
+    `📦 Total Tracked: ${products.length}\n` +
+    `✅ In Stock: ${inStock}\n` +
+    `❌ Sold Out: ${soldOut}`
+  );
+}
+
+if (message.content === "!latest") {
+  const products =
+    Object.values(loadProducts())
+      .sort(
+        (a, b) =>
+          new Date(
+            b.firstSeen || b.detectedAt
+          ) -
+          new Date(
+            a.firstSeen || a.detectedAt
+          )
+      )
+      .slice(0, 10);
+
+  if (!products.length) {
+    return message.reply(
+      "❌ No products found."
+    );
   }
+
+  let reply =
+    "📦 Latest Products\n\n";
+
+  products.forEach(
+    (product, index) => {
+      reply +=
+        `${index + 1}. ${product.title}\n` +
+        `🔗 https://creations.mattel.com/products/${product.handle}\n\n`;
+    }
+  );
+
+  return message.reply(reply);
+}
+
+if (message.content === "!hidden") {
+  const hiddenProducts =
+    Object.values(loadProducts())
+      .filter(
+        product =>
+          product.available === false
+      );
+
+  if (
+    hiddenProducts.length === 0
+  ) {
+    return message.reply(
+      "✅ No hidden products tracked."
+    );
+  }
+
+  let reply =
+    "🚨 Hidden Products\n\n";
+
+  hiddenProducts
+    .slice(0, 25)
+    .forEach(product => {
+      reply +=
+        `📦 ${product.title}\n`;
+    });
+
+  reply +=
+    `\n📊 Total Hidden: ${hiddenProducts.length}`;
+
+  return message.reply(reply);
+}
+
+if (message.content === "!help") {
+  return message.reply(
+    "🤖 MattelBotV3 Commands\n\n" +
+
+    "📦 Core\n" +
+    "!status\n" +
+    "!health\n" +
+    "!stats\n" +
+    "!counts\n" +
+    "!debug\n\n" +
+
+    "🔍 Products\n" +
+    "!latest\n" +
+    "!hidden\n\n" +
+
+    "📢 Alerts\n" +
+    "!alerts\n\n" +
+
+    "⭐ Watchlist\n" +
+    "!watchlist"
+  );
+}
+  }
+  
 );
+
 async function startScanner() {
 
   await scanMattel();
