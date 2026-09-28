@@ -341,12 +341,16 @@ if (product.available) {
     url: product.image
   },
   fields: [
-   
-    {
-      name: "Price",
-      value: `$${product.price}`,
-      inline: true
-    },
+  {
+    name: "📦 Product",
+    value: product.title,
+    inline: false
+  },
+  {
+    name: "💲 Price",
+    value: `$${product.price}`,
+    inline: true
+  },
  
    {
   name: "🛒 QTY 2",
@@ -407,18 +411,22 @@ if (watchMatch && product.available) {
     thumbnail: {
       url: product.image
     },
-    fields: [
-     
-      {
-        name: "Watchlist Keyword",
-        value: watchMatch,
-        inline: true
-      },
-      {
-        name: "Price",
-        value: `$${product.price}`,
-        inline: true
-      },
+   fields: [
+  {
+    name: "📦 Product",
+    value: product.title,
+    inline: false
+  },
+  {
+    name: "🎯 Watchlist Keyword",
+    value: watchMatch,
+    inline: true
+  },
+  {
+    name: "💲 Price",
+    value: `$${product.price}`,
+    inline: true
+  },
       
      {
   name: "🛒 QTY 2",
@@ -494,10 +502,11 @@ if (wasHiddenOpportunity) {
         url: product.image
       },
       fields: [
-        {
-          name: "Product",
-          value: product.title
-        },
+       {
+  name: "📦 Product",
+  value: product.title,
+  inline: false
+},
         {
           name: "Watchlist Keyword",
           value: watchMatch,
@@ -530,10 +539,11 @@ if (wasHiddenOpportunity) {
         url: product.image
       },
       fields: [
-        {
-          name: "Product",
-          value: product.title
-        },
+      {
+  name: "📦 Product",
+  value: product.title,
+  inline: false
+},
         {
           name: "Watchlist Keyword",
           value: watchMatch,
@@ -586,10 +596,11 @@ if (wasHiddenOpportunity) {
         url: product.image
       },
       fields: [
-        {
-          name: "Product",
-          value: product.title
-        },
+       {
+  name: "📦 Product",
+  value: product.title,
+  inline: false
+},
         {
           name: "Launch Date",
           value: product.launchDate || "Mattel Launch Scheduled"
@@ -617,10 +628,11 @@ if (wasHiddenOpportunity) {
         url: product.image
       },
       fields: [
-        {
-          name: "Product",
-          value: product.title
-        },
+       {
+  name: "📦 Product",
+  value: product.title,
+  inline: false
+},
         {
           name: "Price",
           value: `$${product.price}`,
