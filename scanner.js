@@ -216,6 +216,13 @@ try {
 } catch (err) {
   console.error(err);
 }
+
+const pageTextLower = pageHtml.toLowerCase();
+
+const explicitlySoldOut =
+  pageTextLower.includes("sold out") ||
+  pageTextLower.includes("out of stock") ||
+  pageTextLower.includes("unavailable");
 const titleLower = p.title.toLowerCase();
 
 const shouldCheckLaunch =
@@ -338,7 +345,8 @@ for (const product of products) {
 
  const isHiddenOpportunity =
   product.available === false &&
-  !product.launchDate;
+  !product.launchDate &&
+  !explicitlySoldOut;
 
 const isFutureOpportunity =
   product.available === false &&
@@ -413,7 +421,8 @@ if (product.available) {
 } else {
 
   if (
-    !product.launchDate
+    !product.launchDate &&
+    !explicitlySoldOut
   ) {
     seenProducts[product.id].wasHidden = true;
 
