@@ -206,12 +206,14 @@ const productUrl =
   `https://creations.mattel.com/products/${p.handle}`;
 
 let pageHtml = "";
+let productPageFetched = false;
 
 try {
   const pageCheck = await fetch(productUrl);
 
   if (pageCheck.ok) {
     pageHtml = await pageCheck.text();
+    productPageFetched = true;
   }
 } catch (err) {
   console.error(err);
@@ -223,6 +225,7 @@ const explicitlySoldOut =
   pageTextLower.includes("sold out") ||
   pageTextLower.includes("out of stock") ||
   pageTextLower.includes("unavailable");
+
 const titleLower = p.title.toLowerCase();
 
 const shouldCheckLaunch =
@@ -250,7 +253,9 @@ products.push({
   price: activeVariant?.price || null,
   image: p.images?.[0]?.src || null,
   upcoming: launchInfo.upcoming,
-  launchDate: launchInfo.launchDate
+  launchDate: launchInfo.launchDate,
+  productPageFetched,
+  explicitlySoldOut
 });
 
     }
@@ -343,10 +348,11 @@ for (const product of products) {
   }
 };
 
- const isHiddenOpportunity =
+const isHiddenOpportunity =
   product.available === false &&
+  productPageFetched &&
   !product.launchDate &&
-  !explicitlySoldOut;
+  !product.explicitlySoldOut;
 
 const isFutureOpportunity =
   product.available === false &&
@@ -421,20 +427,20 @@ if (product.available) {
 } else {
 
   if (
-    !product.launchDate &&
-    !explicitlySoldOut
-  ) {
-    seenProducts[product.id].wasHidden = true;
+  productPageFetched &&
+  !product.launchDate &&
+  !product.explicitlySoldOut
+) {
+  seenProducts[product.id].wasHidden = true;
 
-    console.log(
-      `HIDDEN PRODUCT DETECTED: ${product.title}`
-    );
-  } else {
-    console.log(
-      `FUTURE RELEASE DETECTED: ${product.title}`
-    );
-  }
-
+  console.log(
+    `HIDDEN PRODUCT DETECTED: ${product.title}`
+  );
+} else {
+  console.log(
+    `FUTURE RELEASE DETECTED: ${product.title}`
+  );
+}
 }
   const watchMatch =
   watchlist.find(keyword =>
