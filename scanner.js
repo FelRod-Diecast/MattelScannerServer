@@ -919,7 +919,8 @@ if (message.content === "!help") {
 
     "🔍 Products\n" +
     "!latest\n" +
-    "!hidden\n\n" +
+    "!hidden\n" +
+    "!summary\n\n" +
 
     "📢 Alerts\n" +
     "!alerts\n\n" +
@@ -927,6 +928,55 @@ if (message.content === "!help") {
     "⭐ Watchlist\n" +
     "!watchlist"
   );
+}
+if (message.content === "!summary") {
+
+  const products =
+    Object.values(loadProducts());
+
+  const hiddenProducts =
+    products.filter(
+      p =>
+        p.available === false &&
+        !p.launchDate
+    );
+
+  const futureOpportunities =
+    products.filter(
+      p =>
+        p.available === false &&
+        p.launchDate
+    );
+
+  let reply =
+    "🚀 MattelBotV3 Opportunity Summary\n\n";
+
+  reply +=
+    `📦 Tracking: ${products.length}\n\n`;
+
+  reply +=
+    `🚀 Future Opportunities: ${futureOpportunities.length}\n`;
+
+  futureOpportunities
+    .slice(0, 5)
+    .forEach(product => {
+      reply +=
+        `• ${product.title}\n`;
+    });
+
+  reply += "\n";
+
+  reply +=
+    `🚨 Hidden Opportunities: ${hiddenProducts.length}\n`;
+
+  hiddenProducts
+    .slice(0, 10)
+    .forEach(product => {
+      reply +=
+        `• ${product.title}\n`;
+    });
+
+  return message.reply(reply);
 }
   }
   
