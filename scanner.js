@@ -338,7 +338,9 @@ for (const product of products) {
 
   wasHidden:
   product.available === false &&
-  !product.launchDate,
+  product.productPageFetched &&
+  !product.launchDate &&
+  !product.explicitlySoldOut,
   hiddenAlertSent: false,
 
   stats: {
@@ -350,7 +352,7 @@ for (const product of products) {
 
 const isHiddenOpportunity =
   product.available === false &&
-  productPageFetched &&
+ product.productPageFetched &&
   !product.launchDate &&
   !product.explicitlySoldOut;
 
@@ -426,8 +428,8 @@ if (product.available) {
 });
 } else {
 
-  if (
-  productPageFetched &&
+ if (
+  product.productPageFetched &&
   !product.launchDate &&
   !product.explicitlySoldOut
 ) {
