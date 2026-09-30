@@ -201,7 +201,6 @@ async function fetchMattelProducts() {
   launchDate: null
 };
 
-const existing = seenProducts[p.id];
 
 const productUrl =
   `https://creations.mattel.com/products/${p.handle}`;
@@ -217,21 +216,17 @@ try {
 } catch (err) {
   console.error(err);
 }
-if (
-  !existing?.launchDate
-) {
-  const titleLower = p.title.toLowerCase();
+const titleLower = p.title.toLowerCase();
 
-  const shouldCheckLaunch =
-    titleLower.includes("rlc") ||
-    titleLower.includes("red line club") ||
-    titleLower.includes("elite 64") ||
-    titleLower.includes("transformers");
+const shouldCheckLaunch =
+  titleLower.includes("rlc") ||
+  titleLower.includes("red line club") ||
+  titleLower.includes("elite 64") ||
+  titleLower.includes("transformers");
 
-  if (shouldCheckLaunch) {
-    launchInfo =
-      getLaunchInfoFromHtml(pageHtml);
-  }
+if (shouldCheckLaunch) {
+  launchInfo =
+    getLaunchInfoFromHtml(pageHtml);
 }
 const activeVariant =
   p.variants?.find(v => v.available) ||
@@ -270,10 +265,48 @@ async function scanMattel() {
 const stats = loadStats();
 const alerts = loadAlerts();
 const watchlist = loadWatchlist();
+const previousProducts = loadProducts();
 
-  for (const product of products) {
-const existingProduct =
-  seenProducts[product.id];
+for (const product of products) {
+  const previous =
+    previousProducts[product.id];
+
+ if (
+  previous &&
+  previous.available === true &&
+  product.available === false
+) {
+  if (seenProducts[product.id]?.stats) {
+    seenProducts[product.id].stats.soldOutEvents++;
+  }
+
+  stats.soldOutToday++;
+
+  console.log(
+    `SOLD OUT: ${product.title}`
+  );
+
+  await sendDiscord({
+    title: "❌ SOLD OUT",
+    url: product.url,
+    color: 16711680,
+    thumbnail: {
+      url: product.image
+    },
+    fields: [
+      {
+        name: "📦 Product",
+        value: product.title,
+        inline: false
+      },
+      {
+        name: "💲 Price",
+        value: `$${product.price}`,
+        inline: true
+      }
+    ]
+  });
+} 
     if (!seenProducts[product.id]) {
 
      seenProducts[product.id] = {
@@ -291,7 +324,9 @@ const existingProduct =
   firstSeen: new Date().toISOString(),
   lastSeen: new Date().toISOString(),
 
-  wasHidden: product.available === false,
+  wasHidden:
+  product.available === false &&
+  !product.launchDate,
   hiddenAlertSent: false,
 
   stats: {
@@ -392,11 +427,13 @@ if (product.available) {
   }
 
 }
-    const watchMatch =
+  const watchMatch =
   watchlist.find(keyword =>
     product.title
       .toLowerCase()
-      .includes(keyword)
+      .includes(
+        keyword.toLowerCase()
+      )
   );
 
 if (watchMatch && product.available) {
@@ -455,16 +492,30 @@ if (watchMatch && product.available) {
     }
   }
 for (const product of products) {
-
   const previous =
-    seenProducts[product.id];
+    previousProducts[product.id];
 
  if (
   previous &&
   previous.available === false &&
   product.available === true
-)
-{
+) {
+  if (!seenProducts[product.id]?.stats) {
+    seenProducts[product.id].stats = {
+      restockEvents: 0,
+      soldOutEvents: 0,
+      restockTimestamps: []
+    };
+  }
+
+  seenProducts[product.id].stats.restockEvents++;
+
+  seenProducts[product.id].stats.restockTimestamps.push(
+    new Date().toISOString()
+  );
+
+  seenProducts[product.id].stats.restockTimestamps =
+    seenProducts[product.id].stats.restockTimestamps.slice(-25);
 
   const wasHiddenOpportunity =
   previous.wasHidden === true;
@@ -473,7 +524,9 @@ const watchMatch =
   watchlist.find(keyword =>
     product.title
       .toLowerCase()
-      .includes(keyword)
+      .includes(
+        keyword.toLowerCase()
+      )
   );
 
 if (wasHiddenOpportunity) {
@@ -739,11 +792,7 @@ saveAlerts(alerts);
 );
 
 }
-client.once("ready", () => {
-  console.log(
-    `✅ Logged in as ${client.user.tag}`
-  );
-});
+
 
 client.on(
   "messageCreate",
@@ -875,12 +924,14 @@ if (message.content === "!latest") {
 }
 
 if (message.content === "!hidden") {
+  const products =
+    Object.values(loadProducts());
+
   const hiddenProducts =
-    Object.values(loadProducts())
-      .filter(
-        product =>
-          product.available === false
-      );
+    products.filter(
+      product =>
+        product.wasHidden === true
+    );
 
   if (
     hiddenProducts.length === 0
@@ -930,23 +981,27 @@ if (message.content === "!help") {
   );
 }
 if (message.content === "!summary") {
-
   const products =
     Object.values(loadProducts());
 
   const hiddenProducts =
     products.filter(
-      p =>
-        p.available === false &&
-        !p.launchDate
+      product =>
+        product.wasHidden === true
     );
 
   const futureOpportunities =
-    products.filter(
-      p =>
-        p.available === false &&
-        p.launchDate
+  products.filter(p => {
+    if (p.available !== false) return false;
+    if (!p.launchDate) return false;
+
+    const launchTime = new Date(p.launchDate).getTime();
+
+    return (
+      !isNaN(launchTime) &&
+      launchTime > Date.now()
     );
+  });
 
   let reply =
     "🚀 MattelBotV3 Opportunity Summary\n\n";
@@ -957,8 +1012,13 @@ if (message.content === "!summary") {
   reply +=
     `🚀 Future Opportunities: ${futureOpportunities.length}\n`;
 
-  futureOpportunities
-    .slice(0, 5)
+ futureOpportunities
+  .sort(
+    (a, b) =>
+      new Date(a.launchDate) -
+      new Date(b.launchDate)
+  )
+  .slice(0, 5)
     .forEach(product => {
       reply +=
         `• ${product.title}\n`;
@@ -1000,5 +1060,9 @@ async function startScanner() {
 client.login(process.env.DISCORD_TOKEN);
 
 client.once("ready", async () => {
+  console.log(
+    `✅ Logged in as ${client.user.tag}`
+  );
+
   await startScanner();
 });
